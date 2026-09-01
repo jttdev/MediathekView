@@ -28,6 +28,18 @@ timer and manual work remain serialized. The checked-in unit sources are in
 `headless/systemd/`; API usage and deployment assumptions are documented in
 `headless/README.md`.
 
+## Deploying
+
+Deploys go through `master` and build on the host from
+`/opt/mediathekview-headless-src` (owned by `admin`) — nothing is copied in from
+a workstation. Build with a JDK between 17 and 21; **JDK 25 cannot compile this
+POM**, so on the dev machine pass
+`JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64`. Installing the JAR and
+restarting the service need root, and SSH as `admin` cannot `sudo`
+non-interactively — run those steps through the MeshCentral agent, which is
+root. Back up the JAR being replaced before installing over it. Full runbook,
+including single-episode backfills: `headless/README.md`.
+
 ## Read-only status checks
 
 Run these on `minipc-china-01` through MeshCentral or an existing SSH session:

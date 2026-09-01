@@ -166,3 +166,69 @@ The API service requires the NAS mount and is sandboxed with write access only
 to its state directory and the configured media library. The timer calls
 the loopback API hourly, so subscription work stays serialized by the API's
 single download worker.
+
+## Deployment
+
+The live instance builds on the host; no artifact is uploaded.
+
+- build checkout: `/opt/mediathekview-headless-src`, owned by `admin`, tracking
+  `origin/master` at `https://github.com/jttdev/MediathekView.git`
+- deployed JAR: `/opt/mediathekview-headless/mediathekview-headless.jar`,
+  `root:root`, mode `0644`
+- superseded JARs stay alongside it as
+  `mediathekview-headless.jar.bak-<deployed-commit>-<UTC timestamp>`
+
+`/opt/MediathekView` (upstream GUI distribution) and
+`/opt/src/MediathekView-headless` (stale root-owned checkout) are not the
+deploy source.
+
+Deploys go through `master`: merge and push there first, then build on the host
+as `admin`, whose home holds the Maven wrapper and dependency cache.
+
+```bash
+cd /opt/mediathekview-headless-src
+git pull --ff-only
+./mvnw -o -f headless/pom.xml package
+```
+
+The POM targets `release 17`, so build with a JDK between 17 and 21 — **JDK 25
+cannot compile it** (`Releaseversion 17 nicht unterstützt`). The host default is
+JDK 21; on the dev machine, where JDK 25 is the default, pass
+`JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64`.
+
+Installing and restarting need root. SSH as `admin` cannot `sudo`
+non-interactively, so run these through the MeshCentral agent, which is root:
+
+```bash
+curl -sS http://127.0.0.1:7070/api/downloads   # confirm nothing is mid-download
+cp -f /opt/mediathekview-headless/mediathekview-headless.jar \
+  "/opt/mediathekview-headless/mediathekview-headless.jar.bak-<deployed-commit>-$(date -u +%Y%m%dT%H%M%SZ)"
+install -o root -g root -m 0644 \
+  /opt/mediathekview-headless-src/headless/target/mediathekview-headless.jar \
+  /opt/mediathekview-headless/mediathekview-headless.jar
+systemctl restart mediathekview-headless-api.service
+curl --fail -sS http://127.0.0.1:7070/health
+```
+
+Finish by posting `/api/sync` once and reading the journal, so a broken build
+surfaces immediately rather than at the next timer run.
+
+## Backfilling a single episode
+
+A download that fails is retried on later syncs, because only completed or
+already-in-library entries are skipped. Retries reach an episode only while it
+is still inside its subscription's `maxResults` window, so an old episode that
+newer ones have pushed out of that window is lost until it is fetched by hand.
+
+Queue it through the running API, which serializes it with the single download
+worker; a second JVM would write `history.db` concurrently:
+
+```bash
+curl -sS -X POST -H 'Content-Type: application/json' \
+  --data '{"id":"ENTRY_ID","subdirectory":"Anna und das wilde Wissen","quality":"HD","subtitles":true}' \
+  http://127.0.0.1:7070/api/downloads
+```
+
+Resolve `ENTRY_ID` first with `POST /api/search`; MediathekViewWeb entry IDs
+are not stable across film-list rebuilds, so an ID from an old history row is
+usually stale.
