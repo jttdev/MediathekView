@@ -5,11 +5,13 @@ This fork adds the standalone Java headless client under `headless/`. Read
 
 ## Live headless instance
 
-- Host: `minipc-china-01` (Ubuntu; LAN `10.9.0.100`, OS hostname may be
-  `19minipc`), running in the China/Dev site timezone (`Asia/Shanghai`).
-- Remote access: use the `meshcentral` skill and the `minipc-china-01` node in
-  MeshCentral group `Dev`. Direct SSH to `admin@10.9.0.100` works only when the
-  Dev LAN is reachable; do not assume it is available remotely.
+- Host: CT 102 `archive-yj-janosch-home` (Debian 13, `10.18.0.12`, timezone
+  `Asia/Singapore`) on the Proxmox host `minipc-china-01` at YJ Janosch Home.
+  Build and mount details: `infra/infra-configs/proxmox/yjh/README.md`.
+- Remote access: `ssh minipc-china-01` (root on the Proxmox host, over the YJ
+  Janosch Home IPsec), then `pct enter 102` or `pct exec 102 -- <cmd>`, which is
+  root in the CT. Fallback: MeshCentral node `minipc-china-01` (group "YJ
+  Janosch Home") is the host, not the CT — reach the CT from it with `pct exec`.
 - JAR: `/opt/mediathekview-headless/mediathekview-headless.jar`
 - configuration: `/etc/mediathekview-headless/subscriptions.json`
 - SQLite state/history: `/var/lib/mediathekview-headless/history.db`
@@ -36,13 +38,13 @@ a workstation. Build with a JDK between 17 and 21; **JDK 25 cannot compile this
 POM**, so on the dev machine pass
 `JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64`. Installing the JAR and
 restarting the service need root, and SSH as `admin` cannot `sudo`
-non-interactively — run those steps through the MeshCentral agent, which is
-root. Back up the JAR being replaced before installing over it. Full runbook,
+non-interactively — run those steps as root in the CT (`pct exec 102` from the
+host). Back up the JAR being replaced before installing over it. Full runbook,
 including single-episode backfills: `headless/README.md`.
 
 ## Read-only status checks
 
-Run these on `minipc-china-01` through MeshCentral or an existing SSH session:
+Run these in CT 102 (`pct exec 102 -- …` on `minipc-china-01`):
 
 ```bash
 systemctl status mediathekview-headless-api.service \

@@ -197,7 +197,7 @@ JDK 21; on the dev machine, where JDK 25 is the default, pass
 `JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64`.
 
 Installing and restarting need root. SSH as `admin` cannot `sudo`
-non-interactively, so run these through the MeshCentral agent, which is root:
+non-interactively, so run these as root in the CT (`pct exec 102` from the host):
 
 ```bash
 curl -sS http://127.0.0.1:7070/api/downloads   # confirm nothing is mid-download
