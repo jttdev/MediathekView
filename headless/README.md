@@ -167,6 +167,24 @@ to its state directory and the configured media library. The timer calls
 the loopback API hourly, so subscription work stays serialized by the API's
 single download worker.
 
+Before each queue, `ExecStartPre` runs `systemd/mediathekview-sync-metrics.sh`
+(installed to `/usr/local/sbin/`), which evaluates the previous run from the
+journal and writes `/var/lib/prometheus/node-exporter/mediathekview_sync.prom`,
+pushed as instance `archive-yj-janosch-home`:
+
+- `mediathekview_sync_last_run_timestamp_seconds` — Unix time the last successfully queued sync was queued (stops advancing when queueing fails).
+- `mediathekview_sync_last_success_timestamp_seconds` — queue time of the last sync that logged no `Subscription sync error/failed` lines.
+- `mediathekview_sync_errors_last_run` — `Subscription sync error/failed` lines the API logged since that queue.
+
+Refresh units and script as root in the CT after `git pull`:
+
+```bash
+cd /opt/mediathekview-headless-src/headless/systemd
+install -m 0755 mediathekview-sync-metrics.sh /usr/local/sbin/
+install -m 0644 mediathekview-headless-sync.service /etc/systemd/system/
+systemctl daemon-reload
+```
+
 ## Deployment
 
 The live instance builds on the host; no artifact is uploaded.

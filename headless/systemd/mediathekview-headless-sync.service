@@ -11,4 +11,7 @@ NoNewPrivileges=true
 PrivateTmp=true
 ProtectHome=true
 ProtectSystem=strict
+# '-+': runs as root outside the sandbox (journal + textfile dir); a metrics
+# failure never blocks the queue.
+ExecStartPre=-+/usr/local/sbin/mediathekview-sync-metrics.sh
 ExecStart=/usr/bin/curl --fail --silent --show-error --retry 5 --retry-connrefused --retry-delay 2 --request POST http://127.0.0.1:7070/api/sync
