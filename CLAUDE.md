@@ -6,11 +6,11 @@ This fork adds the standalone Java headless client under `headless/`. Read
 ## Live headless instance
 
 - Host: CT 102 `archive-yj-janosch-home` (Debian 13, `10.18.0.12`, timezone
-  `Asia/Singapore`) on the Proxmox host `minipc-china-01` at YJ Janosch Home.
+  `Asia/Singapore`) on the Proxmox host `minipc-china-02` at YJ Janosch Home.
   Build and mount details: `infra/infra-configs/proxmox/yjh/README.md`.
-- Remote access: `ssh minipc-china-01` (root on the Proxmox host, over the YJ
+- Remote access: `ssh minipc-china-02` (root on the Proxmox host, over the YJ
   Janosch Home IPsec), then `pct enter 102` or `pct exec 102 -- <cmd>`, which is
-  root in the CT. Fallback: MeshCentral node `minipc-china-01` (group "YJ
+  root in the CT. Fallback: MeshCentral node `minipc-china-02` (group "YJ
   Janosch Home") is the host, not the CT — reach the CT from it with `pct exec`.
 - JAR: `/opt/mediathekview-headless/mediathekview-headless.jar`
 - configuration: `/etc/mediathekview-headless/subscriptions.json`
@@ -44,7 +44,7 @@ including single-episode backfills: `headless/README.md`.
 
 ## Read-only status checks
 
-Run these in CT 102 (`pct exec 102 -- …` on `minipc-china-01`):
+Run these in CT 102 (`pct exec 102 -- …` on `minipc-china-02`):
 
 ```bash
 systemctl status mediathekview-headless-api.service \
